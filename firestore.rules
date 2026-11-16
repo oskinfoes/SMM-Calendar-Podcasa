@@ -1,0 +1,185 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Global safety net: deny everything by default
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() >= 1 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isValidCategory(cat) {
+      return cat in ['Експертний', 'Розважальний', 'Закулісся', 'Продаючий'];
+    }
+
+    function isValidFormat(fmt) {
+      return fmt in ['Рілс', 'Відео', 'Карусель', 'Інфографіка', 'Естетичне відео'];
+    }
+
+    function isValidStatus(status) {
+      return status in [
+        'На затвердженні',
+        'Затверджено',
+        'Знято',
+        'Редагується',
+        'Чекає публікації',
+        'Опубліковано'
+      ];
+    }
+
+    function isValidWorkspace(data, workspaceId) {
+      return data.keys().hasAll(['id', 'name', 'monthLabel', 'seeded', 'ownerId', 'createdAt', 'updatedAt'])
+        && data.keys().hasOnly(['id', 'name', 'monthLabel', 'seeded', 'seedVersion', 'ownerId', 'createdAt', 'updatedAt'])
+        && isValidId(data.id) && data.id == workspaceId && data.id.size() <= 64
+        && data.name is string && data.name.size() >= 1 && data.name.size() <= 120
+        && data.monthLabel is string && data.monthLabel.size() >= 1 && data.monthLabel.size() <= 40
+        && data.seeded is bool
+        && (!('seedVersion' in data) || (data.seedVersion is int && data.seedVersion >= 1 && data.seedVersion <= 100))
+        && data.ownerId is string && data.ownerId.size() >= 1 && data.ownerId.size() <= 128
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
+    function isValidPost(data, workspaceId, postId) {
+      return data.keys().hasAll([
+          'id', 'workspaceId', 'day', 'weekNumber', 'title', 'category', 'format',
+          'status', 'durationOrSlides', 'publishTime', 'caption', 'script',
+          'referenceNote', 'referenceUrl', 'videoUrl', 'coverImage',
+          'authorId', 'createdAt', 'updatedAt'
+        ])
+        && data.keys().hasOnly([
+          'id', 'workspaceId', 'day', 'weekNumber', 'title', 'category', 'format',
+          'status', 'durationOrSlides', 'publishTime', 'caption', 'script',
+          'referenceNote', 'referenceUrl', 'videoUrl', 'coverImage',
+          'authorId', 'createdAt', 'updatedAt'
+        ])
+        && isValidId(data.id) && data.id == postId && data.id.size() <= 64
+        && isValidId(data.workspaceId) && data.workspaceId == workspaceId && data.workspaceId.size() <= 64
+        && data.day is int && data.day >= 1 && data.day <= 31
+        && data.weekNumber is int && data.weekNumber >= 1 && data.weekNumber <= 5
+        && data.title is string && data.title.size() >= 1 && data.title.size() <= 160
+        && isValidCategory(data.category)
+        && isValidFormat(data.format)
+        && isValidStatus(data.status)
+        && data.durationOrSlides is string && data.durationOrSlides.size() <= 40
+        && data.publishTime is string && data.publishTime.size() <= 16
+        && data.caption is string && data.caption.size() <= 4000
+        && data.script is string && data.script.size() <= 8000
+        && data.referenceNote is string && data.referenceNote.size() <= 2000
+        && data.referenceUrl is string && data.referenceUrl.size() <= 1500
+        && data.videoUrl is string && data.videoUrl.size() <= 1500
+        && data.coverImage is string && data.coverImage.size() <= 1500
+        && data.authorId is string && data.authorId.size() >= 1 && data.authorId.size() <= 128
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
+    function isValidComment(data, workspaceId, postId, commentId) {
+      return data.keys().hasAll([
+          'id', 'workspaceId', 'postId', 'authorId', 'authorName', 'authorPhotoUrl', 'text', 'createdAt'
+        ])
+        && data.keys().hasOnly([
+          'id', 'workspaceId', 'postId', 'authorId', 'authorName', 'authorPhotoUrl', 'text', 'createdAt'
+        ])
+        && isValidId(data.id) && data.id == commentId && data.id.size() <= 64
+        && isValidId(data.workspaceId) && data.workspaceId == workspaceId && data.workspaceId.size() <= 64
+        && isValidId(data.postId) && data.postId == postId && data.postId.size() <= 64
+        && data.authorId is string && data.authorId.size() >= 1 && data.authorId.size() <= 128
+        && data.authorName is string && data.authorName.size() >= 1 && data.authorName.size() <= 120
+        && data.authorPhotoUrl is string && data.authorPhotoUrl.size() <= 500
+        && data.text is string && data.text.size() >= 1 && data.text.size() <= 2000
+        && data.createdAt is timestamp;
+    }
+
+    match /workspaces/{workspaceId} {
+      allow get: if isValidId(workspaceId) && workspaceId == 'podcasa-november-2026';
+      allow list: if false;
+
+      allow create: if isValidId(workspaceId)
+        && workspaceId == 'podcasa-november-2026'
+        && isValidWorkspace(incoming(), workspaceId)
+        && incoming().createdAt == request.time
+        && incoming().updatedAt == request.time;
+
+      allow update: if isValidId(workspaceId)
+        && workspaceId == 'podcasa-november-2026'
+        && isValidWorkspace(incoming(), workspaceId)
+        && incoming().ownerId == existing().ownerId
+        && incoming().id == existing().id
+        && incoming().createdAt == existing().createdAt
+        && incoming().updatedAt == request.time
+        && incoming().diff(existing()).affectedKeys().hasOnly(['seeded', 'seedVersion', 'updatedAt']);
+
+      allow delete: if false;
+
+      match /posts/{postId} {
+        allow get: if isValidId(workspaceId)
+          && workspaceId == 'podcasa-november-2026'
+          && isValidId(postId);
+
+        allow list: if resource.data.workspaceId == 'podcasa-november-2026';
+
+        allow create: if isValidId(workspaceId)
+          && workspaceId == 'podcasa-november-2026'
+          && isValidId(postId)
+          && isValidPost(incoming(), workspaceId, postId)
+          && incoming().createdAt == request.time
+          && incoming().updatedAt == request.time;
+
+        allow update: if isValidId(workspaceId)
+          && workspaceId == 'podcasa-november-2026'
+          && isValidId(postId)
+          && isValidPost(incoming(), workspaceId, postId)
+          && incoming().id == existing().id
+          && incoming().workspaceId == existing().workspaceId
+          && incoming().authorId == existing().authorId
+          && incoming().createdAt == existing().createdAt
+          && incoming().updatedAt == request.time
+          && (
+            incoming().diff(existing()).affectedKeys().hasOnly(['status', 'updatedAt']) ||
+            incoming().diff(existing()).affectedKeys().hasOnly(['videoUrl', 'updatedAt']) ||
+            incoming().diff(existing()).affectedKeys().hasOnly([
+              'day', 'weekNumber', 'title', 'category', 'format', 'status',
+              'durationOrSlides', 'publishTime', 'caption', 'script',
+              'referenceNote', 'referenceUrl', 'videoUrl', 'coverImage', 'updatedAt'
+            ])
+          );
+
+        allow delete: if isValidId(workspaceId)
+          && workspaceId == 'podcasa-november-2026'
+          && isValidId(postId);
+
+        match /comments/{commentId} {
+          allow get: if isValidId(workspaceId)
+            && workspaceId == 'podcasa-november-2026'
+            && isValidId(postId)
+            && isValidId(commentId);
+
+          allow list: if resource.data.workspaceId == 'podcasa-november-2026';
+
+          allow create: if isValidId(workspaceId)
+            && workspaceId == 'podcasa-november-2026'
+            && isValidId(postId)
+            && isValidId(commentId)
+            && isValidComment(incoming(), workspaceId, postId, commentId)
+            && exists(/databases/$(database)/documents/workspaces/$(workspaceId)/posts/$(postId))
+            && incoming().createdAt == request.time;
+
+          allow update: if false;
+          allow delete: if false;
+        }
+      }
+    }
+  }
+}

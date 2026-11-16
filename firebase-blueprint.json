@@ -1,0 +1,266 @@
+{
+  "entities": {
+    "Workspace": {
+      "title": "Workspace",
+      "description": "Shared monthly content calendar workspace for agency and client collaboration.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[a-zA-Z0-9_\\-]+$",
+          "maxLength": 64
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        "monthLabel": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 40
+        },
+        "seeded": {
+          "type": "boolean"
+        },
+        "seedVersion": {
+          "type": "integer"
+        },
+        "ownerId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "monthLabel",
+        "seeded",
+        "ownerId",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "WorkspaceMember": {
+      "title": "WorkspaceMember",
+      "description": "Authenticated collaborator or client participating in a shared workspace.",
+      "type": "object",
+      "properties": {
+        "uid": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128
+        },
+        "displayName": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        "role": {
+          "type": "string",
+          "enum": ["owner", "collaborator"]
+        },
+        "joinedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": ["uid", "displayName", "role", "joinedAt"]
+    },
+    "CalendarPost": {
+      "title": "CalendarPost",
+      "description": "A planned social media post inside the 4-week calendar.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[a-zA-Z0-9_\\-]+$",
+          "maxLength": 64
+        },
+        "workspaceId": {
+          "type": "string",
+          "pattern": "^[a-zA-Z0-9_\\-]+$",
+          "maxLength": 64
+        },
+        "day": {
+          "type": "integer"
+        },
+        "weekNumber": {
+          "type": "integer"
+        },
+        "title": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 160
+        },
+        "category": {
+          "type": "string",
+          "enum": ["Експертний", "Розважальний", "Закулісся", "Продаючий"]
+        },
+        "format": {
+          "type": "string",
+          "enum": ["Рілс", "Відео", "Карусель", "Інфографіка", "Естетичне відео"]
+        },
+        "status": {
+          "type": "string",
+          "enum": [
+            "На затвердженні",
+            "Затверджено",
+            "Знято",
+            "Редагується",
+            "Чекає публікації",
+            "Опубліковано"
+          ]
+        },
+        "durationOrSlides": {
+          "type": "string",
+          "maxLength": 40
+        },
+        "publishTime": {
+          "type": "string",
+          "maxLength": 16
+        },
+        "caption": {
+          "type": "string",
+          "maxLength": 4000
+        },
+        "script": {
+          "type": "string",
+          "maxLength": 8000
+        },
+        "referenceNote": {
+          "type": "string",
+          "maxLength": 2000
+        },
+        "referenceUrl": {
+          "type": "string",
+          "maxLength": 1500
+        },
+        "videoUrl": {
+          "type": "string",
+          "maxLength": 1500
+        },
+        "coverImage": {
+          "type": "string",
+          "maxLength": 1500
+        },
+        "authorId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "workspaceId",
+        "day",
+        "weekNumber",
+        "title",
+        "category",
+        "format",
+        "status",
+        "durationOrSlides",
+        "publishTime",
+        "caption",
+        "script",
+        "referenceNote",
+        "referenceUrl",
+        "videoUrl",
+        "coverImage",
+        "authorId",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "PostComment": {
+      "title": "PostComment",
+      "description": "Real-time review comment attached to a specific calendar post.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[a-zA-Z0-9_\\-]+$",
+          "maxLength": 64
+        },
+        "workspaceId": {
+          "type": "string",
+          "pattern": "^[a-zA-Z0-9_\\-]+$",
+          "maxLength": 64
+        },
+        "postId": {
+          "type": "string",
+          "pattern": "^[a-zA-Z0-9_\\-]+$",
+          "maxLength": 64
+        },
+        "authorId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128
+        },
+        "authorName": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        "authorPhotoUrl": {
+          "type": "string",
+          "maxLength": 500
+        },
+        "text": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 2000
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "workspaceId",
+        "postId",
+        "authorId",
+        "authorName",
+        "authorPhotoUrl",
+        "text",
+        "createdAt"
+      ]
+    }
+  },
+  "firestore": {
+    "/workspaces/{workspaceId}": {
+      "schema": { "$ref": "#/entities/Workspace" },
+      "description": "Top-level workspace metadata and seed state."
+    },
+    "/workspaces/{workspaceId}/members/{userId}": {
+      "schema": { "$ref": "#/entities/WorkspaceMember" },
+      "description": "Membership records for authenticated agency and client collaborators."
+    },
+    "/workspaces/{workspaceId}/posts/{postId}": {
+      "schema": { "$ref": "#/entities/CalendarPost" },
+      "description": "Real-time 4-week planned posts collection."
+    },
+    "/workspaces/{workspaceId}/posts/{postId}/comments/{commentId}": {
+      "schema": { "$ref": "#/entities/PostComment" },
+      "description": "Real-time comment thread for a planned post."
+    }
+  }
+}

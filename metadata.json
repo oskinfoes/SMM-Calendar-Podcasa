@@ -1,0 +1,8 @@
+{
+  "name": "Podcasa Content Calendar",
+  "description": "Interactive editorial social media content calendar and client approval workspace for November.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
